@@ -1,0 +1,3 @@
+type,folder,category,product,description,price,currency_code,payment_date,billing_frequency,billing_cycle,billing_type,discount_voucher,note,support_details,url,tags,alert_type,payment_mode,alert_profile,refund_days,ltdval_price,ltdval_frequency,ltdval_cycle,addon_line_no,expiry_date,status
+Subscription,TV,Default Category,Netflix,Streaming service,100.00,USD,2021-07-30,1,Month,date,ABC-123,Recurring,Email support,https://www.netflix.com/,"TV shows,Movies",1,Free,System Default (Sub),30,999.00,1,Month,,2099-01-01,Recur
+Subscription,Movies,Default Category,Prime Video,Streaming service,50.00,USD,2022-05-17,1,Month,date,ABC-456,Recurring,Email and phone support,https://www.primevideo.com/,"Movies",1,Free,System Default (Sub),30,599.00,1,Month,2,2099-01-01,Recur

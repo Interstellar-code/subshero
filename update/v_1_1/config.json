@@ -1,0 +1,12 @@
+{
+	"sql": [
+		"sql_update.sql",
+		"catalog.sql"
+	],
+	"scripts": [
+		"delete.php"
+	],
+	"replace": [
+		"package"
+	]
+}

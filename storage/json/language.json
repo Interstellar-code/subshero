@@ -1,0 +1,86 @@
+[
+  {
+    "id": 1,
+    "langcode": "de_De",
+    "name": "german",
+    "foldername": "german",
+    "status": 1
+  },
+  {
+    "id": 2,
+    "langcode": "en_US",
+    "name": "english",
+    "foldername": "english",
+    "status": 1
+  },
+  {
+    "id": 3,
+    "langcode": "es_ES",
+    "name": "spanish",
+    "foldername": "spanish",
+    "status": 1
+  },
+  {
+    "id": 4,
+    "langcode": "fr_FR",
+    "name": "french",
+    "foldername": "french",
+    "status": 1
+  },
+  {
+    "id": 5,
+    "langcode": "pt-pt",
+    "name": "portuguese_pt",
+    "foldername": "portuguese_pt",
+    "status": 1
+  },
+  {
+    "id": 6,
+    "langcode": "pt-BR",
+    "name": "portuguese_br",
+    "foldername": "portuguese_br",
+    "status": 1
+  },
+  {
+    "id": 7,
+    "langcode": "tr_TR",
+    "name": "turkish",
+    "foldername": "turkish",
+    "status": 1
+  },
+  {
+    "id": 8,
+    "langcode": "ru_RU",
+    "name": "russian",
+    "foldername": "russian",
+    "status": 1
+  },
+  {
+    "id": 9,
+    "langcode": "sv_SV",
+    "name": "swedish",
+    "foldername": "swedish",
+    "status": 1
+  },
+  {
+    "id": 10,
+    "langcode": "it-ch",
+    "name": "italian",
+    "foldername": "italian",
+    "status": 1
+  },
+  {
+    "id": 11,
+    "langcode": "bg_BG",
+    "name": "bulgarian",
+    "foldername": "bulgarian",
+    "status": 1
+  },
+  {
+    "id": 12,
+    "langcode": "id_ID",
+    "name": "indonesian",
+    "foldername": "indonesian",
+    "status": 1
+  }
+]
