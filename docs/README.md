@@ -1,6 +1,6 @@
-# Subshero
+# Subshero Documentation
 
-![Subshero Logo](public/assets/images/logo.png)
+![Subshero Logo](../public/assets/images/logo.png)
 
 Subshero is a comprehensive subscription management application built with Laravel that helps users track and manage their subscriptions, lifetime purchases, and recurring payments.
 
@@ -83,24 +83,24 @@ For detailed information on each feature, please refer to the specific documenta
 
 ## Installation
 
-For installation instructions, see the [Installation Guide](docs/installation.md).
+For installation instructions, see the [Installation Guide](installation.md).
 
 ## User Guide
 
-For user documentation, see the [User Guide](docs/user-guide.md).
+For user documentation, see the [User Guide](user-guide.md).
 
 ## Admin Guide
 
-For administrator documentation, see the [Admin Guide](docs/admin-guide.md).
+For administrator documentation, see the [Admin Guide](admin-guide.md).
 
 ## API Documentation
 
-For API documentation, see the [API Documentation](docs/api-documentation.md).
+For API documentation, see the [API Documentation](api-documentation.md).
 
 ## Update System
 
-For information about the update system, see the [Update System Guide](docs/update-system.md).
+For information about the update system, see the [Update System Guide](update-system.md).
 
 ## Troubleshooting
 
-For troubleshooting common issues, see the [Troubleshooting Guide](docs/troubleshooting.md).
+For troubleshooting common issues, see the [Troubleshooting Guide](troubleshooting.md).
