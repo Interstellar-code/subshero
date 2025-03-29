@@ -20,20 +20,26 @@ class CustomerController extends Controller
 {
     public function __construct()
     {
+        // Call the parent constructor to inherit base controller functionality
         parent::__construct();
+        // Apply the 'auth' middleware to ensure only authenticated users can access this controller's methods
         $this->middleware('auth');
     }
 
     public function index()
     {
-        $data = [
-            'slug' => 'admin/customer',
-        ];
-        return view('admin/customer/index', $data);
-    }
+    // Set the slug variable for identifying the current page in the view
+    $data = [
+        'slug' => 'admin/customer',
+    ];
+    // Return the 'admin/customer/index' view, passing the $data array for use in the view
+    return view('admin/customer/index', $data);
+}
+
 
     public function create(Request $request)
     {
+        // Validate the incoming request data to ensure it meets the defined rules
         $validator = Validator::make($request->all(), [
             'customer_type' => 'required|integer|digits_between:0,' . len()->customers->customer_type,
             'pricing_type' => 'required|integer|digits_between:0,' . len()->customers->pricing_type,
@@ -52,11 +58,13 @@ class CustomerController extends Controller
             'image' => 'image|dimensions:min_width=100,min_height=200',
         ]);
 
+        // If the validation fails, return a JSON response with the error messages
         if ($validator->fails()) {
             return Response::json([
                 'status' => false,
                 'message' => $validator->errors(),
             ]);
+            // If validation fails, you might want to log the errors or redirect the user back to the form with the errors.
             // abort(419);
         }
 
@@ -79,9 +87,11 @@ class CustomerController extends Controller
 
         $customer_id = CustomerModel::create($data);
 
-        // Check if user selected an image then save image
+        // Check if an image file was included in the request
         if ($request->hasFile('image')) {
+            // If an image was included, store the image and get its path
             $image_path = File::add_get_path($request->file('image'), 'customer', $customer_id);
+            // Update the customer model with the image path
             CustomerModel::do_update($customer_id, [
                 'image' => $image_path,
             ]);
@@ -99,17 +109,21 @@ class CustomerController extends Controller
 
     public function get(Request $request)
     {
+        // Validate the request to ensure an 'id' is provided and is an integer
         $validator = Validator::make($request->all(), [
             'id' => 'required|integer',
         ]);
 
+        // If the validation fails, return a JSON response with the error messages
         if ($validator->fails()) {
             return Response::json([
                 'status' => false,
                 'message' => $validator->errors(),
             ]);
+            // If validation fails, you might want to log the errors or redirect the user back to the form with the errors.
             // abort(419);
         }
+        // Retrieve the customer data based on the provided 'id' and return it as a JSON response
         return Response::json(CustomerModel::get($request->input('id')));
     }
 
@@ -127,10 +141,12 @@ class CustomerController extends Controller
             // abort(419);
         }
 
+        // Set the slug and retrieve the customer data for the edit view
         $data = [
             'slug' => 'customer',
             'data' => CustomerModel::get($request->input('id')),
         ];
+        // Return the 'admin/customer/edit' view, passing the data for rendering the edit form
         return view('admin/customer/edit', $data);
     }
 
@@ -148,10 +164,11 @@ class CustomerController extends Controller
             // abort(419);
         }
 
+        // Attempt to delete the customer and return a JSON response indicating success or failure
         return Response::json([
             'status' => CustomerModel::del($request->input('id')),
             'message' => 'Success',
-        ], 200);
+        ], 200); // 200 OK status code
     }
 
 

@@ -46,16 +46,20 @@ class SettingsController extends Controller
 
     public function __construct()
     {
+        // Call the parent constructor
         parent::__construct();
+        // Ensure the user is authenticated
         $this->middleware('auth');
     }
 
     public function index(Request $request)
     {
+        // Set the slug and get settings data
         $data = [
             'slug' => 'admin/settings',
             'data' => SettingsModel::get($this->id),
         ];
+        // Return the settings index view
         return view('admin/settings/index', $data);
     }
 
@@ -78,27 +82,36 @@ class SettingsController extends Controller
     }
 
 
-    public function profile_upload(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'picture' => 'image|dimensions:min_width=100,min_height=200',
-        ]);
-
-        if ($validator->fails()) {
-            return Response::json([
-                'status' => false,
-                'message' => $validator->errors(),
+    
+        /**
+         * Handles the upload of a new profile picture.
+         *
+         * @param  \Illuminate\Http\Request  $request
+         * @return \Illuminate\Http\JsonResponse
+         */
+        public function profile_upload(Request $request)
+        {
+            // Validate the request to ensure the uploaded file is an image with the required dimensions
+            $validator = Validator::make($request->all(), [
+                'picture' => 'image|dimensions:min_width=100,min_height=200',
             ]);
-            // abort(419);
+    
+            // If the validation fails, return a JSON response with the error messages
+            if ($validator->fails()) {
+                return Response::json([
+                    'status' => false,
+                    'message' => $validator->errors(),
+                ]);
+                // abort(419);
+            }
+    
+            // Upload the image and get the path
+            $image_path = File::add_get_path($request->file('picture'), 'avatar', Auth::id());
+            // Update the user model with the new image path
+            UserModel::do_update(Auth::id(), [
+                'image' => $image_path,
+            ]);
         }
-
-        // Upload image
-        $image_path = File::add_get_path($request->file('picture'), 'avatar', Auth::id());
-        UserModel::do_update(Auth::id(), [
-            'image' => $image_path,
-        ]);
-    }
-
     public function profile_update_info(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -116,6 +129,7 @@ class SettingsController extends Controller
             // abort(419);
         }
 
+        // Create an array with the user's information from the request
         $data = [
             'first_name' => $request->input('first_name'),
             'last_name' => $request->input('last_name'),
@@ -124,14 +138,17 @@ class SettingsController extends Controller
             'country' => $request->input('country'),
         ];
 
+        // Update the user's information in the database
         $status = UserModel::do_update(Auth::id(), $data);
 
+        // If the request is an AJAX request, return a JSON response
         if ($request->ajax()) {
             return Response::json([
                 'status' => true,
                 'message' => 'Success',
-            ], 200);
+            ], 200); // 200 OK status code
         } else {
+            // If the request is not an AJAX request, redirect back to the previous page
             return back();
         }
     }
@@ -432,6 +449,7 @@ class SettingsController extends Controller
 
     public function script(Request $request)
     {
+        // Create a new object to store script content
         $content = new \stdClass();
         $content->header = null;
         $content->footer = null;

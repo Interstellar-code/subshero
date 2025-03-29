@@ -14,11 +14,22 @@ class AlertController extends Controller
 {
     // RESTful API standards
 
+    /**
+     * AlertController constructor.
+     *
+     * This method calls the parent constructor to apply authentication middleware.
+     */
     public function __construct()
     {
         parent::__construct();
     }
 
+    /**
+     * Display a listing of the resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(Request $request)
     {
         // Validate the request and get the validated data
@@ -85,17 +96,23 @@ class AlertController extends Controller
             'users_alert.*',
         )->get();
 
-        // Return error response if no records found
+        // Return error response if no records found (404 Not Found)
         if ($records->isEmpty()) {
             return response()->json([
                 'message' => 'No data found',
             ], 404);
         }
 
-        // Return success response with records
+        // Return success response with records (200 OK)
         return response()->json($records, 200);
     }
 
+    /**
+     * Display the specified resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show(Request $request)
     {
         // Merge the request with the value from the route parameter and validate the request
@@ -112,9 +129,15 @@ class AlertController extends Controller
 
         // Find the record from database and return success response
         $data = UserAlert::find($fields['id']);
-        return response()->json($data, 200);
+        return response()->json($data, 200); // 200 OK status code
     }
 
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function create(Request $request)
     {
         // Validate the request and get the validated data
@@ -172,6 +195,12 @@ class AlertController extends Controller
         return response()->json($row, 201);
     }
 
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function update(Request $request)
     {
         // Merge the request with the value from the route parameter and validate the request
@@ -220,7 +249,7 @@ class AlertController extends Controller
         $row->save();
 
 
-        // Return success response with updated data
+        // Return success response with updated data (200 OK)
         return response()->json($row, 200);
     }
 

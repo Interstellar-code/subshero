@@ -15,11 +15,20 @@ class FolderController extends Controller
 {
     // RESTful API standards
 
+    /**
+     * FolderController constructor.
+     */
     public function __construct()
     {
         parent::__construct();
     }
 
+    /**
+     * Display a listing of the resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(Request $request)
     {
         // Validate the request and get the validated data
@@ -86,14 +95,14 @@ class FolderController extends Controller
             'folder.*',
         )->get();
 
-        // Return error response if no records found
+        // Return error response if no records found (404 Not Found)
         if ($records->isEmpty()) {
             return response()->json([
                 'message' => 'No data found',
             ], 404);
         }
 
-        // Return success response with records
+        // Return success response with records (200 OK)
         return response()->json($records, 200);
     }
 
@@ -111,11 +120,17 @@ class FolderController extends Controller
             ],
         ]);
 
-        // Find the record from database and return success response
+        // Find the record from database and return success response (200 OK)
         $data = Folder::find($fields['id']);
         return response()->json($data, 200);
     }
 
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function create(Request $request)
     {
         // Validate the request and get the validated data
@@ -157,7 +172,7 @@ class FolderController extends Controller
         $row->is_default = $is_default;
         $row->save();
 
-        // Return success response with data
+        // Return success response with data (201 Created)
         return response()->json($row, 201);
     }
 

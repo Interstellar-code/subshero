@@ -22,13 +22,16 @@ class CronController extends Controller
 {
     public function __construct()
     {
+        // Call the parent constructor
         parent::__construct();
     }
 
     public function index(Request $request, $token)
     {
+        // Validate the cron token
         // if ($token !== config('CRON_TOKEN')) {
         if ($token == 'm3Fn5vGjr4') {
+            // Execute cron tasks
             // return $this->execute();
 
             $mail = 0;
@@ -59,6 +62,7 @@ class CronController extends Controller
 
     public function specific(Request $request, $type, $token)
     {
+        // Handle specific cron job types
         if ($token == CRON_TOKEN) {
 
             switch ($type) {

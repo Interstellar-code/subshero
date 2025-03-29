@@ -20,11 +20,20 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
+    /**
+     * AuthController constructor.
+     */
     public function __construct()
     {
         parent::__construct();
     }
 
+    /**
+     * Login api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function login(Request $request)
     {
         $fields = $request->validate([
@@ -53,6 +62,12 @@ class AuthController extends Controller
         return response($response, 201);
     }
 
+    /**
+     * Register api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function register(Request $request)
     {
         $fields = $request->validate([
@@ -90,6 +105,12 @@ class AuthController extends Controller
         return response($response, 201);
     }
 
+    /**
+     * Get token api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function token(Request $request)
     {
         $user = $request->user();
@@ -98,6 +119,12 @@ class AuthController extends Controller
         return $user;
     }
 
+    /**
+     * Logout api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function logout(Request $request)
     {
         // Revoke all tokens for the user

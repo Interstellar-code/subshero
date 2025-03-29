@@ -17,86 +17,107 @@ class UserController extends Controller
 {
     // RESTful API standards
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
+  /**
+   * UserController constructor.
+   */
+ public function __construct()
+ {
+  parent::__construct();
+ }
 
-    public function show(Request $request)
-    {
-        // Merge the request with the value from the route parameter and validate the request
-        $request->merge(['id' => $request->route('id')]);
-        $fields = $request->validate([
-            'id' => 'required|integer|in:' . Auth::id(),
-        ]);
+ /**
+  * Get User api
+  *
+  * @param  \Illuminate\Http\Request  $request
+  * @return \Illuminate\Http\JsonResponse
+  */
+ public function show(Request $request)
+ {
+  // Merge the request with the value from the route parameter and validate the request
+  $request->merge(['id' => $request->route('id')]);
+  $fields = $request->validate([
+   'id' => 'required|integer|in:' . Auth::id(),
+  ]);
 
-        // Find the record from database and return success response
-        $data = User::find($fields['id']);
-        return response()->json($data, 200);
-    }
+  // Find the record from database and return success response
+  $data = User::find($fields['id']);
+  return response()->json($data, 200); // 200 OK
+ }
 
-    public function update(Request $request)
-    {
-        // Merge the request with the value from the route parameter and validate the request
-        $request->merge(['id' => $request->route('id')]);
-        $fields = $request->validate([
-            'id' => 'required|integer|in:' . Auth::id(),
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'string',
-                'max:' . len()->users->email,
-                Rule::unique('users', 'email')->ignore(Auth::id()),
-            ],
-            'password' => 'nullable|string|min:8',
-            'phone' => 'nullable|string|max:' . len()->users->phone,
-            'country' => 'required|string|max:5',
-            'company_name' => 'nullable|string|max:' . len()->users->company_name,
-            'facebook_username' => 'nullable|string|alpha_dash|max:' . len()->users->facebook_username,
-        ]);
-
-        // Update data into database
-        $row = User::find($fields['id']);
-        $row->first_name = $fields['first_name'];
-        $row->last_name = $fields['last_name'];
-        $row->name = $fields['first_name'] . ' ' . $fields['last_name'];
-        // $row->email = $fields['email'];
-        $row->phone = $fields['phone'];
-        $row->country = $fields['country'];
-        $row->company_name = $fields['company_name'];
-        $row->facebook_username = $fields['facebook_username'];
-
-        // Check if user not subscribed to Team plan
-        if (empty(Auth::user()->team_user_id)) {
-            $row->email = $fields['email'];
+    
+        
+                /**
+                 * Update User api
+                 *
+                 * @param  \Illuminate\Http\Request  $request
+                 * @return \Illuminate\Http\JsonResponse
+                 */
+                public function update(Request $request)
+                {
+                    // Merge the request with the value from the route parameter and validate the request
+                    $request->merge(['id' => $request->route('id')]);
+                    $fields = $request->validate([
+                        'id' => 'required|integer|in:' . Auth::id(),
+                        'first_name' => 'required|string|max:255',
+                        'last_name' => 'required|string|max:255',
+                        'email' => [
+                            'required',
+                            'string',
+                            'max:' . len()->users->email,
+                            Rule::unique('users', 'email')->ignore(Auth::id()),
+                        ],
+                        'password' => 'nullable|string|min:8',
+                        'phone' => 'nullable|string|max:' . len()->users->phone,
+                        'country' => 'required|string|max:5',
+                        'company_name' => 'nullable|string|max:' . len()->users->company_name,
+                        'facebook_username' => 'nullable|string|alpha_dash|max:' . len()->users->facebook_username,
+                    ]);
+        
+                    // Update data into database
+                    $row = User::find($fields['id']);
+                    $row->first_name = $fields['first_name'];
+                    $row->last_name = $fields['last_name'];
+                    $row->name = $fields['first_name'] . ' ' . $fields['last_name'];
+                    // $row->email = $fields['email'];
+                    $row->phone = $fields['phone'];
+                    $row->country = $fields['country'];
+                    $row->company_name = $fields['company_name'];
+                    $row->facebook_username = $fields['facebook_username'];
+        
+                    // Check if user not subscribed to Team plan
+                    if (empty(Auth::user()->team_user_id)) {
+                        $row->email = $fields['email'];
+                    }
+        
+                    // Check if password submitted
+                    if (!empty($fields['password'])) {
+                        $row->password = Hash::make($fields['password']);
+                    }
+        
+                    $row->save();
+                    $row->image = img_url($row->image);
+        
+                    // Return success response with updated data (200 OK)
+                    return response()->json($row, 200);
+                }
+        /**
+         * Get User Preferences api
+         *
+         * @param  \Illuminate\Http\Request  $request
+         * @return \Illuminate\Http\JsonResponse
+         */
+        public function showPreferences(Request $request)
+        {
+            // Merge the request with the value from the route parameter and validate the request
+            $request->merge(['id' => $request->route('id')]);
+            $fields = $request->validate([
+                'id' => 'required|integer|in:' . Auth::id(),
+            ]);
+    
+            // Find the record from database and return success response
+            $data = UserModel::get_profile();
+            return response()->json($data, 200); // 200 OK
         }
-
-        // Check if password submitted
-        if (!empty($fields['password'])) {
-            $row->password = Hash::make($fields['password']);
-        }
-
-        $row->save();
-        $row->image = img_url($row->image);
-
-        // Return success response with updated data
-        return response()->json($row, 200);
-    }
-
-    public function showPreferences(Request $request)
-    {
-        // Merge the request with the value from the route parameter and validate the request
-        $request->merge(['id' => $request->route('id')]);
-        $fields = $request->validate([
-            'id' => 'required|integer|in:' . Auth::id(),
-        ]);
-
-        // Find the record from database and return success response
-        $data = UserModel::get_profile();
-        return response()->json($data, 200);
-    }
-
     public function updatePreferences(Request $request)
     {
         // Merge the request with the value from the route parameter and validate the request

@@ -16,11 +16,20 @@ use Illuminate\Validation\Rule;
 
 class ReportController extends Controller
 {
+    /**
+     * ReportController constructor.
+     */
     public function __construct()
     {
         parent::__construct();
     }
 
+    /**
+     * Get Report api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(Request $request)
     {
         return response()->json([

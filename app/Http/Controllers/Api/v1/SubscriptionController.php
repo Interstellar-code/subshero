@@ -24,13 +24,23 @@ use Illuminate\Validation\Rule;
 
 class SubscriptionController extends Controller
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
+/**
+ * SubscriptionController constructor.
+ */
+public function __construct()
+{
+ parent::__construct();
+}
 
+    /**
+     * Get Subscription api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(Request $request)
     {
+        // Validate the request and get the validated data
         $fields = $request->validate([
             'q' => 'nullable|string|max:255',
             'start' => 'nullable|integer|min:0',
@@ -41,16 +51,10 @@ class SubscriptionController extends Controller
 
         // Get the user input
         $search_query = $fields['q'] ?? '';
-        $start = $fields['start'] ?? 0;
-        $length = $fields['length'] ?? 10;
-        $sort_str = $fields['sort'] ?? '';
-        $filters_json_str = $fields['filters'] ?? '';
-
-        // Initialize default values
         $valid_filters = [];
         $valid_sort_arr = [];
 
-        // Remove unicode characters
+        // Remove unicode characters from the search query
         $search_query = lib()->do->filter_unicode($search_query);
 
 
@@ -230,9 +234,15 @@ class SubscriptionController extends Controller
         }
 
         // Return success response with records
-        return response()->json($records_with_tags, 200);
+        return response()->json($records_with_tags, 200); // 200 OK
     }
 
+    /**
+     * Get upcoming Subscription api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function upcoming()
     {
         // Fetch records
@@ -278,13 +288,19 @@ class SubscriptionController extends Controller
         if ($records->isEmpty()) {
             return response()->json([
                 'message' => 'No data found',
-            ], 404);
+            ], 404); // 404 Not Found
         }
 
         // Return success response with records
-        return response()->json($records_with_tags, 200);
+        return response()->json($records_with_tags, 200); // 200 OK
     }
 
+    /**
+     * Get Subscription api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show(Request $request)
     {
         // Merge the request with the value from the route parameter and validate the request
@@ -301,7 +317,7 @@ class SubscriptionController extends Controller
 
         // Find the record from database and return success response
         $data = Subscription::getDescribedSubscription($fields['id']);
-        return response()->json($data, 200);
+        return response()->json($data, 200); // 200 OK
     }
 
     public function create(Request $request)

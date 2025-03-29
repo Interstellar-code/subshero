@@ -10,23 +10,32 @@ use Illuminate\Validation\Rule;
 
 class NotificationController extends Controller
 {
+    /**
+     * NotificationController constructor.
+     */
     public function __construct()
     {
         parent::__construct();
     }
 
-    public function index()
-    {
-        $data = NotificationEngine::staticModel('extension')::where([
-            ['user_id', Auth::id()],
-            ['read', 0],
-        ])->orderByDesc('id')
-            ->limit(5)
-            ->get();
-
-        return $data;
-    }
-
+    
+        /**
+         * Get Notification api
+         *
+         * @param  \Illuminate\Http\Request  $request
+         * @return \Illuminate\Http\JsonResponse
+         */
+        public function index()
+        {
+            $data = NotificationEngine::staticModel('extension')::where([
+                ['user_id', Auth::id()],
+                ['read', 0],
+            ])->orderByDesc('id')
+                ->limit(5)
+                ->get();
+    
+            return $data;
+        }
     public function update(Request $request, $id)
     {
         $fields = $request->validate([
@@ -48,6 +57,12 @@ class NotificationController extends Controller
         return response()->json($notification);
     }
 
+    /**
+     * Delete Notification api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function delete(Request $request, $id)
     {
         $fields = $request->mergeIfMissing([
@@ -70,6 +85,12 @@ class NotificationController extends Controller
         return response()->json($notification);
     }
 
+    /**
+     * Clear Notification api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function clear(Request $request)
     {
         NotificationEngine::staticModel('extension')::where('user_id', Auth::id())

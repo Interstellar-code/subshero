@@ -14,24 +14,41 @@ class ProductRelatedEntityController extends Controller
 {
     public function __construct()
     {
+        // Call the parent constructor
         parent::__construct();
+        // Ensure the user is authenticated
         $this->middleware('auth');
     }
 
+    /**
+     * Dynamically constructs the model class name based on the provided entity.
+     *
+     * @param string $entity The name of the entity (e.g., 'Type', 'Platform', 'Category').
+     * @return string The fully qualified model class name.
+     */
     protected function get_model($entity)
     {
         return "App\Models\Product" . ucfirst($entity);
     }
 
+    /**
+     * Displays the index view for a specific product related entity.
+     *
+     * @param string $productRelatedEntity The name of the product related entity (e.g., 'Type', 'Platform', 'Category').
+     * @return \Illuminate\View\View
+     */
     public function index($productRelatedEntity)
     {
+        // Return the product related entity index view
         return view('admin/product/entity/index', ['productRelatedEntity' => $productRelatedEntity]);
     }
 
     public function datatable_index(Request $request, $productRelatedEntity)
     {
         $productRelatedEntityModel = $this->get_model($productRelatedEntity);
+        // Get the search value from the request
         $search_arr = $request->get('search');
+        // Assign the search value
         $searchValue = $search_arr['value'];
         // Remove unicode characters
         $searchValue = preg_replace('/[\x00-\x1F\x7F-\xFF]/', '', $searchValue);
@@ -100,13 +117,21 @@ class ProductRelatedEntityController extends Controller
         return view('admin/product/entity/edit', $data);
     }
 
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function create(Request $request)
     {
+        // Validate the request data
         $validator = Validator::make($request->all(), [
-            'product_related_entity_name' => 'required|string|max:' . len()->products->product_name,
-            'entity' => 'required|string|in:Type,Platform,Category'
+            'product_related_entity_name' => 'required|string|max:' . len()->products->product_name, // product_related_entity_name is required and has a maximum length defined in the config
+            'entity' => 'required|string|in:Type,Platform,Category' // entity is required and must be one of the specified values
         ]);
 
+        // If the validator fails, return a JSON response with the error messages
         if ($validator->fails()) {
             return Response::json([
                 'status' => false,

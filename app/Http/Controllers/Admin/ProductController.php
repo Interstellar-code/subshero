@@ -23,23 +23,28 @@ class ProductController extends Controller
 {
     public function __construct()
     {
+        // Call the parent constructor
         parent::__construct();
+        // Ensure the user is authenticated
         $this->middleware('auth');
     }
 
     public function index()
     {
+        // Set the slug for the view
         $data = [
             'slug' => 'admin/product',
         ];
+        // Return the product index view
         return view('admin/product/index', $data);
     }
 
     public function create(Request $request)
     {
+        // Create a new product after validating the request data
         $validator = Validator::make($request->all(), [
-            'category_id' => 'nullable|integer',
-            'product_type' => 'required|integer|digits_between:0,' . len()->products->product_type,
+            'category_id' => 'nullable|integer', // Category ID can be null or an integer
+            'product_type' => 'required|integer|digits_between:0,' . len()->products->product_type, // Product type is required and must be an integer within the allowed range
             'pricing_type' => 'required|integer|digits_between:0,' . len()->products->pricing_type,
             'product_name' => 'required|string|max:' . len()->products->product_name,
             'brandname' => 'nullable|string|max:' . len()->products->brandname,
@@ -68,11 +73,13 @@ class ProductController extends Controller
             'ltdval_cycle' => 'nullable|integer|between:1,' . len()->products->ltdval_cycle,
         ]);
 
+        // If the validation fails, return a JSON response with the error messages
         if ($validator->fails()) {
             return Response::json([
                 'status' => false,
                 'message' => $validator->errors(),
             ]);
+            // If validation fails, you might want to log the errors or redirect the user back to the form with the errors.
             // abort(419);
         }
 
@@ -108,11 +115,14 @@ class ProductController extends Controller
         $product_id = ProductModel::create($data);
 
         // Check if user selected an image then save image
+        // Update the product images
         $result = File::update_images($request, $product_id);
 
+        // If the request is an AJAX request, return a JSON response
         if ($request->ajax()) {
-            return Response::json($result, 200);
+            return Response::json($result, 200); // 200 OK status code
         } else {
+            // If the request is not an AJAX request, redirect back to the previous page
             return back();
         }
     }

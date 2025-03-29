@@ -22,7 +22,9 @@ class HomeController extends Controller
      */
     public function __construct()
     {
+        // Call the parent constructor
         parent::__construct();
+        // Ensure the user is authenticated
         $this->middleware('auth');
     }
 
@@ -33,6 +35,7 @@ class HomeController extends Controller
      */
     public function index(Request $request)
     {
+        // Set default user picture (commented out)
         // UserModel::set_default_picture(Auth::id());
 
         // return view('home');

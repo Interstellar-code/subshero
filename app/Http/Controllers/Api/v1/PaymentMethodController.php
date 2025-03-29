@@ -15,29 +15,34 @@ class PaymentMethodController extends Controller
 {
     // RESTful API standards
 
+    /**
+     * PaymentMethodController constructor.
+     */
     public function __construct()
     {
         parent::__construct();
     }
 
+    /**
+     * Get Payment Method api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(Request $request)
     {
         // Validate the request and get the validated data
         $fields = $request->validate([
             'q' => 'nullable|string|max:255',
-            'start' => 'nullable|integer|min:0',
-            'length' => 'nullable|integer|min:1',
-            'sort' => 'nullable|string|max:255',
         ]);
-
-        // Get the user input and initialize default values
+        // Get the user input and initialize default values from the request or set defaults
         $search_query = $fields['q'] ?? '';
         $start = $fields['start'] ?? 0;
         $length = $fields['length'] ?? 10;
         $sort_str = $fields['sort'] ?? '';
         $valid_sort_arr = [];
 
-        // Remove unicode characters
+        // Remove unicode characters from the search query
         $search_query = lib()->do->filter_unicode($search_query);
 
 
@@ -90,11 +95,11 @@ class PaymentMethodController extends Controller
         if ($records->isEmpty()) {
             return response()->json([
                 'message' => 'No data found',
-            ], 404);
+            ], 404); // 404 Not Found
         }
 
         // Return success response with records
-        return response()->json($records, 200);
+        return response()->json($records, 200); // 200 OK
     }
 
     public function show(Request $request)
@@ -113,7 +118,8 @@ class PaymentMethodController extends Controller
 
         // Find the record from database and return success response
         $data = PaymentMethod::find($fields['id']);
-        return response()->json($data, 200);
+        // Return the payment method data as a JSON response
+        return response()->json($data, 200); // 200 OK
     }
 
     public function create(Request $request)

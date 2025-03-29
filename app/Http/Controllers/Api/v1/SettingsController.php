@@ -16,11 +16,20 @@ use App\Models\Api\User as ApiUser;
 
 class SettingsController extends Controller
 {
+    /**
+     * SettingsController constructor.
+     */
     public function __construct()
     {
         parent::__construct();
     }
 
+    /**
+     * Get Settings api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index()
     {
         $output = [
@@ -53,6 +62,12 @@ class SettingsController extends Controller
         // return response()->json(lib()->user->default);
     }
 
+    /**
+     * Update Settings api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function update(Request $request)
     {
         $fields = $request->validate([

@@ -34,11 +34,13 @@ class WebhookController extends Controller
 
     public function __construct()
     {
+        // Call the parent constructor
         parent::__construct();
     }
 
     public function admin_v1(Request $request)
     {
+        // Handle admin-related webhook events (version 1)
         // // Log::debug('Start');
 
         $apache_headers = apache_request_headers();
@@ -145,6 +147,7 @@ class WebhookController extends Controller
 
     public function handle(Request $request)
     {
+        // Placeholder for handling generic webhook requests
     }
 
     private function set_wp_user_id($user_data)

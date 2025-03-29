@@ -32,25 +32,31 @@ class EmailController extends Controller
 
     public function __construct()
     {
+        // Call the parent constructor
         parent::__construct();
+        // Ensure the user is authenticated
         $this->middleware('auth');
     }
 
     public function index(Request $request)
     {
+        // Set the slug and get settings data
         $data = [
             'slug' => 'admin/settings',
             'data' => SettingsModel::get($this->id),
         ];
+        // Return the settings index view
         return view('admin/settings/index', $data);
     }
 
     public function smtp(Request $request)
     {
+        // Set the slug and get settings data for SMTP configuration
         $data = [
             'slug' => 'admin/settings/email/smtp',
             'data' => SettingsModel::get($this->id),
         ];
+        // Return the SMTP settings view
         return view('admin/settings/email/smtp', $data);
     }
 
@@ -74,6 +80,7 @@ class EmailController extends Controller
 
     public function template_create(Request $request)
     {
+        // Validate the request data for creating a new email template
         $validator = Validator::make($request->all(), [
             'type' => 'required|string|max:' . len()->email_templates->type,
             'subject' => 'required|string|max:' . len()->email_templates->subject,
@@ -90,10 +97,14 @@ class EmailController extends Controller
             // abort(419);
         }
 
+        // Determine if the template should be set as default based on the request input
         $is_default = $request->input('is_default') ? 1 : 0;
+        // Determine the status of the template based on the request input
         $status = $request->input('status') ? 1 : 0;
+        // Get the template type from the request input
         $type = $request->input('type');
 
+        // If the template is set as default, clear any existing default templates of the same type
         if ($is_default) {
             EmailTemplate::clear_default($type);
         }
@@ -108,14 +119,17 @@ class EmailController extends Controller
             'user_id' => Auth::id(),
         ];
 
+        // Create a new email template record in the database
         $data_id = EmailTemplate::create($data);
 
+        // If the request is an AJAX request, return a JSON response
         if ($request->ajax()) {
             return Response::json([
                 'status' => true,
                 'message' => 'Success',
-            ], 200);
+            ], 200); // 200 OK status code
         } else {
+            // If the request is not an AJAX request, redirect back to the previous page
             return back();
         }
     }

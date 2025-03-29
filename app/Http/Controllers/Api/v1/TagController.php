@@ -15,11 +15,20 @@ class TagController extends Controller
 {
     // RESTful API standards
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
+  /**
+   * TagController constructor.
+   */
+ public function __construct()
+ {
+  parent::__construct();
+ }
 
+    /**
+     * Get Tag api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(Request $request)
     {
         // Validate the request and get the validated data
@@ -86,15 +95,15 @@ class TagController extends Controller
             'tags.*',
         )->get();
 
-        // Return error response if no records found
+        // Return error response if no records found (404 Not Found)
         if ($records->isEmpty()) {
             return response()->json([
                 'message' => 'No data found',
-            ], 404);
+            ], 404); // 404 Not Found
         }
 
-        // Return success response with records
-        return response()->json($records, 200);
+        // Return success response with records (200 OK)
+        return response()->json($records, 200); // 200 OK
     }
 
     public function show(Request $request)
@@ -113,7 +122,7 @@ class TagController extends Controller
 
         // Find the record from database and return success response
         $data = Tag::find($fields['id']);
-        return response()->json($data, 200);
+        return response()->json($data, 200); // 200 OK
     }
 
     public function create(Request $request)
@@ -142,7 +151,7 @@ class TagController extends Controller
         $row->name = $fields['name'];
         $row->save();
 
-        // Return success response with data
+        // Return success response with data (201 Created)
         return response()->json($row, 201);
     }
 

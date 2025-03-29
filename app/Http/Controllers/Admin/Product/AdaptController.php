@@ -23,18 +23,28 @@ class AdaptController extends Controller
 {
     public function __construct()
     {
+        // Call the parent constructor
         parent::__construct();
+        // Ensure the user is authenticated
         $this->middleware('auth');
     }
 
     public function index()
     {
+        // Set the slug for the view
         $data = [
             'slug' => 'admin/product/adapt',
         ];
+        // Return the product adapt index view
         return view('admin/product/adapt/index', $data);
     }
 
+    /**
+     * Get the specified resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function get(Request $request)
     {
         $validator = Validator::make($request->all(), [

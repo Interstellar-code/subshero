@@ -23,6 +23,7 @@ class Controller extends BaseController
      */
     public function __construct()
     {
+        // Get the current route name
         $route_name = \Request::route()->getName();
 
 
@@ -145,6 +146,7 @@ class Controller extends BaseController
 
     public function maintenance(Request $request)
     {
+        // Check if the system is in maintenance mode
         if (Storage::disk('local')->exists('maintenance.txt')) {
             $user_id = Auth::id();
             $user = UserModel::get($user_id);

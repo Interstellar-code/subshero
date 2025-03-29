@@ -9,11 +9,20 @@ use Illuminate\Support\Facades\Auth;
 
 class CalendarController extends Controller
 {
+    /**
+     * CalendarController constructor.
+     */
     public function __construct()
     {
         parent::__construct();
     }
 
+    /**
+     * Get calendar api
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index()
     {
         $data = [];
