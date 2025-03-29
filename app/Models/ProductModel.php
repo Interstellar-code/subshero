@@ -7,12 +7,32 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Library\NotificationEngine;
 
+/**
+ * ProductModel - Handles all product-related database operations
+ *
+ * This model manages the core product data including:
+ * - Product CRUD operations
+ * - Product type relationships
+ * - Tag associations
+ * - Audit logging for changes
+ * - Product retrieval with joins to related tables
+ */
 class ProductModel extends BaseModel
 {
+    /** @var string Database table name for products */
     private const TABLE = 'products';
+    
+    /** @var string Protected table name for Eloquent compatibility */
     protected $table = 'products';
+    
+    /** @var int|null Stores the current user ID for session persistence */
     private static $user_id = NULL;
 
+    /**
+     * Get a product by ID with its product type information
+     * @param int $id Product ID to retrieve
+     * @return object|null Product object with type info or null if not found
+     */
     public static function get($id)
     {
         return DB::table(self::TABLE)
@@ -23,6 +43,10 @@ class ProductModel extends BaseModel
             ->first();
     }
 
+    /**
+     * Get all products with their product type information
+     * @return \Illuminate\Support\Collection Collection of all product objects with type info
+     */
     public static function get_all()
     {
         return DB::table(self::TABLE)
@@ -31,6 +55,11 @@ class ProductModel extends BaseModel
             ->get();
     }
 
+    /**
+     * Get all active products except default/reserved products
+     * @return \Illuminate\Support\Collection Collection of non-default product objects with type info
+     * @see PRODUCT_RESERVED_ID Constant defining reserved product IDs
+     */
     public static function get_all_except_default()
     {
         return DB::table(self::TABLE)
@@ -41,16 +70,28 @@ class ProductModel extends BaseModel
             ->get();
     }
 
+    /**
+     * Get products for a specific user with brand and folder info
+     * @param int|null $user_id User ID (defaults to current authenticated user)
+     * @return \Illuminate\Support\Collection Collection of product objects with brand and folder info
+     * @note Joins with brands and folder tables to provide additional context
+     */
     public static function get_by_user($user_id = NULL)
     {
         return DB::table(self::TABLE)
-            ->leftJoin('brands', 'subscriptions.brand_id', '=', 'brands.id')
+            ->leftJoin('brands', 'subscriptions.b brand_id', '=', 'brands.id')
             ->leftJoin('folder', 'subscriptions.folder_id', '=', 'folder.id')
             ->where('subscriptions.user_id', self::get_user_id($user_id))
             ->select('subscriptions.*', 'brands.name as brand_name', 'folder.color as folder_color')
             ->get();
     }
 
+    /**
+     * Get products in a specific folder with brand info
+     * @param int $folder_id Folder ID to filter by
+     * @return \Illuminate\Support\Collection Collection of product objects with brand info
+     * @note Joins with brands table to provide brand names
+     */
     public static function get_by_folder($folder_id)
     {
         return DB::table(self::TABLE)
@@ -60,6 +101,12 @@ class ProductModel extends BaseModel
             ->get();
     }
 
+    /**
+     * Create a new product record
+     * @param array $data Product data to insert
+     * @return int ID of the newly created product
+     * @note Automatically adds created_at timestamp and creates audit log
+     */
     public static function create($data)
     {
         $data_id = DB::table(self::TABLE)
@@ -79,6 +126,11 @@ class ProductModel extends BaseModel
         return $data_id;
     }
 
+    /**
+     * Create a single product-tag association
+     * @param array $data Tag association data (subscription_id, tag_id, user_id)
+     * @return int ID of the newly created tag association
+     */
     public static function create_tag($data)
     {
         // Insert single data
@@ -86,6 +138,11 @@ class ProductModel extends BaseModel
             ->insertGetId($data);
     }
 
+    /**
+     * Create multiple product-tag associations
+     * @param array $data_arr Array of tag association data
+     * @return bool True if all inserts succeeded
+     */
     public static function create_tags($data_arr)
     {
         // Insert multiple data
@@ -93,6 +150,13 @@ class ProductModel extends BaseModel
             ->insert($data_arr);
     }
 
+    /**
+     * Update an existing product record
+     * @param int $id Product ID to update
+     * @param array $data Product data to update
+     * @return int Number of affected rows
+     * @note Creates an audit log entry for the update operation
+     */
     public static function do_update($id, $data)
     {
         $status = DB::table(self::TABLE)
@@ -113,6 +177,11 @@ class ProductModel extends BaseModel
         return $status;
     }
 
+    /**
+     * Get all tags associated with a product
+     * @param int $subscription_id Product ID
+     * @return \Illuminate\Support\Collection Collection of tag objects
+     */
     public static function get_tags($subscription_id)
     {
         return DB::table('subscriptions_tags')
@@ -123,6 +192,12 @@ class ProductModel extends BaseModel
             ->get();
     }
 
+    /**
+     * Get all tags associated with a product as key-value array
+     * @param int $subscription_id Product ID
+     * @return array Associative array of tag IDs to tag names
+     * @note Returns a simplified format compared to get_tags()
+     */
     public static function get_tags_arr($subscription_id)
     {
         $tags = DB::table('subscriptions_tags')
@@ -143,6 +218,12 @@ class ProductModel extends BaseModel
     }
 
 
+    /**
+     * Delete a product and its associated tags
+     * @param int $id Product ID to delete
+     * @return int|null Number of affected rows for tag deletion or null if product deletion failed
+     * @note Creates audit log entry and cleans up related tag associations
+     */
     public static function del($id)
     {
         $status = DB::table(self::TABLE)
@@ -168,6 +249,12 @@ class ProductModel extends BaseModel
         }
     }
 
+    /**
+     * Get products for a user with brand info for event purposes
+     * @param int|null $user_id User ID (defaults to current authenticated user)
+     * @return \Illuminate\Support\Collection Collection of product objects with brand info
+     * @note Similar to get_by_user() but without folder info and optimized for events
+     */
     public static function get_event_by_user($user_id = NULL)
     {
         return DB::table(self::TABLE)
@@ -177,6 +264,12 @@ class ProductModel extends BaseModel
             ->get();
     }
 
+    /**
+     * Find or create a product by name
+     * @param string $name Product name to search/create
+     * @return int ID of existing or newly created product
+     * @note Implements the common find-or-create pattern to ensure uniqueness
+     */
     public static function get_or_create($name)
     {
         $data = DB::table(self::TABLE)

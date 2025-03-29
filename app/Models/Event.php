@@ -7,11 +7,25 @@ use App\Models\Traits\CheckAlertType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Event - Manages event data and scheduling
+ *
+ * This model handles:
+ * - Event creation and updates
+ * - Setting event statuses (e.g., cancel)
+ * - Managing next payment dates for subscriptions
+ */
 class Event extends BaseModel
 {
     use CheckAlertType;
+    
+    /** @var bool Disable timestamps for this model */
     public $timestamps = false;
+    
+    /** @var array Fields that are guarded from mass assignment */
     protected $guarded = [];
+    
+    /** @var array Default attribute values */
     protected $attributes = [
         'event_timezone' => APP_TIMEZONE,
         'event_type_color' => 'green',
@@ -20,6 +34,10 @@ class Event extends BaseModel
         'event_migrate' => 0,
     ];
 
+    /**
+     * Constructor: Sets default attribute values
+     * @param array $attributes Attributes to set
+     */
     public function __construct(array $attributes = [])
     {
         $this->attributes['event_datetime'] = lib()->do->timezone_convert([
@@ -29,6 +47,12 @@ class Event extends BaseModel
         parent::__construct($attributes);
     }
 
+    /**
+     * Update an event
+     * @param int $id Event ID
+     * @param array $data Data to update
+     * @return void
+     */
     public static function do_update($id, $data)
     {
         $event = self::find($id);
@@ -37,6 +61,12 @@ class Event extends BaseModel
         }
     }
 
+    /**
+     * Set cancel status for events related to a subscription
+     * @param string $table_name Table name
+     * @param int $table_row_id Table row ID
+     * @return void
+     */
     public static function set_cancel_status($table_name, $table_row_id)
     {
         self::where([
@@ -53,6 +83,12 @@ class Event extends BaseModel
         ]);
     }
 
+    /**
+     * Set the next payment date for a subscription event
+     * @param int $subscription_id Subscription ID
+     * @param string $next_payment_date Next payment date
+     * @return void
+     */
     public static function set_next_payment_date($subscription_id, $next_payment_date)
     {
         $history = SubscriptionModel::get_last_history($subscription_id, 1);
@@ -81,6 +117,11 @@ class Event extends BaseModel
         ]);
     }
 
+    /**
+     * Get the event ID by table row ID
+     * @param int $table_row_id Table row ID
+     * @return int|null Event ID or null if not found
+     */
     public static function get_event_id_by_table_row_id($table_row_id)
     {
         return self::where([

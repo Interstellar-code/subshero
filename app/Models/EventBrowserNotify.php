@@ -8,23 +8,44 @@ use Illuminate\Support\Facades\Auth;
 use App\Library\NotificationEngine;
 use App\Models\Traits\CheckAlertType;
 
+/**
+ * EventBrowserNotify - Manages browser notification events
+ * 
+ * This model handles:
+ * - Preparing and sending browser notifications
+ * - Managing event data for notifications
+ */
 class EventBrowserNotify extends Model
 {
     use HasFactory;
     use CheckAlertType;
 
+    /** @var string Table name for event browser notifications */
     protected $table = 'event_browser_notify';
+    
+    /** @var array Default attribute values */
     protected $attributes = [
         'status' => 0,
     ];
+    
+    /** @var array Fields that are guarded from mass assignment */
     protected $guarded = [];
 
+    /**
+     * Constructor: Sets default attribute values
+     * @param array $attributes Attributes to set
+     */
     public function __construct(array $attributes = [])
     {
         $this->attributes['icon'] = asset_ver('assets/images/favicon.ico');
         parent::__construct($attributes);
     }
 
+    /**
+     * Send a browser notification message
+     * @param array $message_data Message data including subscription and message
+     * @return bool True if message was sent successfully
+     */
     public static function send_message(array $message_data)
     {
         $status = false;
@@ -48,6 +69,11 @@ class EventBrowserNotify extends Model
         return $status;
     }
 
+    /**
+     * Prepare message data for a browser notification
+     * @param array $message_data Message data including subscription
+     * @return array Prepared message data
+     */
     public static function prepare_message_data(array $message_data)
     {
         $subscription = $message_data['subscription'];
@@ -71,7 +97,6 @@ class EventBrowserNotify extends Model
             $new_time = strtotime($subscription->next_payment_date);
             $date_diff = $new_time - $now_int_time;
             $subscription->renew_days = round($date_diff / (60 * 60 * 24));
-
 
             $result['message'] = NotificationTemplate::get_message($type, [
                 '{subscription_renew_days}' => [
@@ -120,7 +145,6 @@ class EventBrowserNotify extends Model
                 ],
                 '{product_name}' => [
                     'subscription' => $subscription,
-                    'product' => $product,
                 ],
             ]);
 
@@ -139,6 +163,10 @@ class EventBrowserNotify extends Model
         return $result;
     }
 
+    /**
+     * Send multiple browser notification messages
+     * @return int Number of messages sent
+     */
     public static function send_messages()
     {
         $count = 0;
@@ -220,7 +248,7 @@ class EventBrowserNotify extends Model
         foreach ($notifications_events as $event) {
             // Check scheduled date
             $now = lib()->do->timezone_convert([
-                'to_timezone' => APP_TIMEZONE,
+            'to_timezone' => APP_TIMEZONE,
             ]);
 
             $event->event_type_scdate = lib()->do->timezone_convert([
@@ -295,6 +323,11 @@ class EventBrowserNotify extends Model
         return $count;
     }
 
+    /**
+     * Add an event for subscription extension push
+     * @param array $data Event data
+     * @return bool True if event was added successfully
+     */
     public static function add_event_for_subscription_extension_push($data)
     {
         if (!self::needDo([

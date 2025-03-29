@@ -6,12 +6,29 @@ use App\BaseModel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * CustomerModel - Manages customer data and their plans
+ * 
+ * This model handles:
+ * - Customer retrieval and creation
+ * - Linking customers to specific plans
+ */
 class CustomerModel extends BaseModel
 {
+    /** @var string Database table name (users) */
     private const TABLE = 'users';
+    
+    /** @var int Role ID for customers */
     private const ROLE_ID = 2;
+    
+    /** @var int|null Current user ID for session persistence */
     private static $user_id = NULL;
 
+    /**
+     * Get a customer by ID with their plan information
+     * @param int $id Customer ID
+     * @return object|null Customer object with plan info or null if not found
+     */
     public static function get($id)
     {
         return DB::table(self::TABLE)
@@ -23,6 +40,10 @@ class CustomerModel extends BaseModel
             ->first();
     }
 
+    /**
+     * Get all customers with their plan information and coupons
+     * @return \Illuminate\Support\Collection Collection of customer objects with plan and coupon info
+     */
     public static function get_all()
     {
         $customers = DB::table(self::TABLE)
@@ -44,6 +65,12 @@ class CustomerModel extends BaseModel
         return $customers;
     }
 
+    /**
+     * Get subscriptions for a specific user (This method seems misplaced)
+     * @param int|null $user_id User ID (defaults to current user)
+     * @return \Illuminate\Support\Collection Collection of subscription objects
+     * @note This method seems to be related to subscriptions and might be better placed in SubscriptionModel
+     */
     public static function get_by_user($user_id = NULL)
     {
         return DB::table(self::TABLE)
@@ -54,6 +81,12 @@ class CustomerModel extends BaseModel
             ->get();
     }
 
+    /**
+     * Get subscriptions in a specific folder (This method seems misplaced)
+     * @param int $folder_id Folder ID
+     * @return \Illuminate\Support\Collection Collection of subscription objects
+     * @note This method seems to be related to subscriptions and might be better placed in SubscriptionModel
+     */
     public static function get_by_folder($folder_id)
     {
         return DB::table(self::TABLE)
@@ -63,12 +96,23 @@ class CustomerModel extends BaseModel
             ->get();
     }
 
+    /**
+     * Create a new customer
+     * @param array $data Customer data
+     * @return int Inserted customer ID
+     */
     public static function create($data)
     {
         return DB::table(self::TABLE)
             ->insertGetId(parent::_add_created($data));
     }
 
+    /**
+     * Create a tag for a subscription (This method seems misplaced)
+     * @param array $data Tag data
+     * @return int Inserted tag ID
+     * @note This method seems to be related to subscriptions and might be better placed in SubscriptionModel
+     */
     public static function create_tag($data)
     {
         // Insert single data
@@ -76,6 +120,12 @@ class CustomerModel extends BaseModel
             ->insertGetId($data);
     }
 
+    /**
+     * Create tags for a subscription (This method seems misplaced)
+     * @param array $data_arr Array of tag data
+     * @return bool True if all inserts succeeded
+     * @note This method seems to be related to subscriptions and might be better placed in SubscriptionModel
+     */
     public static function create_tags($data_arr)
     {
         // Insert multiple data
@@ -83,6 +133,13 @@ class CustomerModel extends BaseModel
             ->insert($data_arr);
     }
 
+    /**
+     * Update customer data and plan
+     * @param int $id Customer ID
+     * @param array $data Customer data to update
+     * @return int Number of affected rows
+     * @note Handles plan ID updates in the users_plans table
+     */
     public static function do_update($id, $data)
     {
         if (isset($data['plan_id'])) {
@@ -102,6 +159,12 @@ class CustomerModel extends BaseModel
         return $status;
     }
 
+    /**
+     * Get tags for a subscription (This method seems misplaced)
+     * @param int $subscription_id Subscription ID
+     * @return \Illuminate\Support\Collection Collection of tag objects
+     * @note This method seems to be related to subscriptions and might be better placed in SubscriptionModel
+     */
     public static function get_tags($subscription_id)
     {
         return DB::table('subscriptions_tags')
@@ -112,6 +175,12 @@ class CustomerModel extends BaseModel
             ->get();
     }
 
+    /**
+     * Get tags for a subscription as key-value array (This method seems misplaced)
+     * @param int $subscription_id Subscription ID
+     * @return array Associative array of tag IDs to names
+     * @note This method seems to be related to subscriptions and might be better placed in SubscriptionModel
+     */
     public static function get_tags_arr($subscription_id)
     {
         $tags = DB::table('subscriptions_tags')
@@ -131,7 +200,12 @@ class CustomerModel extends BaseModel
         return $data;
     }
 
-
+    /**
+     * Delete a subscription (This method seems misplaced)
+     * @param int $id Subscription ID
+     * @return int Number of affected rows
+     * @note This method seems to be related to subscriptions and might be better placed in SubscriptionModel
+     */
     public static function del($id)
     {
         $status = DB::table(self::TABLE)
@@ -146,6 +220,12 @@ class CustomerModel extends BaseModel
         }
     }
 
+    /**
+     * Get event by user (This method seems misplaced)
+     * @param int|null $user_id User ID (defaults to current user)
+     * @return \Illuminate\Support\Collection Collection of subscription objects
+     * @note This method seems to be related to subscriptions and might be better placed in SubscriptionModel
+     */
     public static function get_event_by_user($user_id = NULL)
     {
         return DB::table(self::TABLE)
@@ -154,8 +234,6 @@ class CustomerModel extends BaseModel
             ->select('subscriptions.*', 'brands.name as brand_name')
             ->get();
     }
-
-
 
 
 

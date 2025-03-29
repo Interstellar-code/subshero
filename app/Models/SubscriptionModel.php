@@ -8,16 +8,43 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Library\NotificationEngine;
 
+/**
+ * SubscriptionModel - Handles all subscription-related operations
+ *
+ * This model manages:
+ * - Subscription CRUD operations
+ * - Subscription status changes (active, canceled, refunded)
+ * - Billing cycle calculations
+ * - Subscription analytics and reporting
+ * - Tag management for subscriptions
+ *
+ * @note Uses Carbon for date calculations and NotificationEngine for event logging
+ */
 class SubscriptionModel extends BaseModel
 {
+    /** @var string Database table name */
     private const TABLE = 'subscriptions';
+    
+    /** @var string Eloquent table name */
     protected $table = 'subscriptions';
+    
+    /** @var int|null Current user ID for session persistence */
     private static $user_id = NULL;
+    
+    /** @var bool Disable automatic timestamp management */
     public $timestamps = false;
 
-    // public const _type = ['Unknown', 'Subscription', 'Trial', 'Lifetime', 'Revenue'];
-    //
+    // Subscription types (commented out but documented):
+    // 1 = Regular Subscription
+    // 2 = Trial
+    // 3 = Lifetime
+    // 4 = Revenue
 
+    /**
+     * Get a subscription by ID
+     * @param int $id Subscription ID
+     * @return object|null Subscription object or null if not found
+     */
     public static function get($id)
     {
         return DB::table(self::TABLE)
@@ -26,12 +53,20 @@ class SubscriptionModel extends BaseModel
             ->first();
     }
 
+    /**
+     * Get all subscriptions
+     * @return \Illuminate\Support\Collection Collection of all subscription objects
+     */
     public static function get_all()
     {
         return DB::table(self::TABLE)
             ->get();
     }
 
+    /**
+     * Get subscriptions eligible for cron processing
+     * @return \Illuminate\Support\Collection Collection of active subscriptions (type = 1)
+     */
     public static function get_all_for_cron()
     {
         return DB::table(self::TABLE)
@@ -39,10 +74,19 @@ class SubscriptionModel extends BaseModel
             ->get();
     }
 
+    /**
+     * Get all subscriptions for a specific user with extended info
+     * @param int|null $user_id User ID (defaults to current authenticated user)
+     * @return \Illuminate\Support\Collection Collection with:
+     *   - Subscription details
+     *   - Product info
+     *   - Folder data
+     *   - Payment method
+     *   - Alert preferences
+     */
     public static function get_by_user($user_id = NULL)
     {
         return DB::table(self::TABLE)
-            // ->leftJoin('brands', 'subscriptions.brand_id', '=', 'brands.id')
             ->leftJoin('products', 'subscriptions.brand_id', '=', 'products.id')
             ->leftJoin('product_types', 'products.product_type', '=', 'product_types.id')
             ->leftJoin('product_categories', 'subscriptions.category_id', '=', 'product_categories.id')
@@ -63,10 +107,15 @@ class SubscriptionModel extends BaseModel
             ->get();
     }
 
+    /**
+     * Get subscriptions in a specific folder for a user
+     * @param int $folder_id Folder ID
+     * @param int|null $user_id User ID (defaults to current user)
+     * @return \Illuminate\Support\Collection Same structure as get_by_user() but filtered by folder
+     */
     public static function get_by_folder($folder_id, $user_id = NULL)
     {
         return DB::table(self::TABLE)
-            // ->leftJoin('brands', 'subscriptions.brand_id', '=', 'brands.id')
             ->leftJoin('products', 'subscriptions.brand_id', '=', 'products.id')
             ->leftJoin('product_types', 'products.product_type', '=', 'product_types.id')
             ->leftJoin('product_categories', 'subscriptions.category_id', '=', 'product_categories.id')
@@ -109,6 +158,13 @@ class SubscriptionModel extends BaseModel
         }
     }
 
+    /**
+     * Create a new subscription
+     * @param array $data Subscription data including:
+     *   - product_id, price, billing_cycle, etc.
+     * @return int Inserted subscription ID
+     * @note Updates the user's total subscription count automatically
+     */
     public static function create($data)
     {
         $id = DB::table(self::TABLE)
@@ -117,38 +173,59 @@ class SubscriptionModel extends BaseModel
         return $id;
     }
 
+    /**
+     * Create a single subscription-tag association
+     * @param array $data Contains subscription_id and tag_id
+     * @return int Inserted association ID
+     */
     public static function create_tag($data)
     {
-        // Insert single data
         return DB::table('subscriptions_tags')
             ->insertGetId($data);
     }
 
+    /**
+     * Create multiple subscription-tag associations
+     * @param array $data_arr Array of tag association data arrays
+     * @return bool True if all inserts succeeded
+     */
     public static function create_tags($data_arr)
     {
-        // Insert multiple data
         return DB::table('subscriptions_tags')
             ->insert($data_arr);
     }
 
+    /**
+     * Delete all tags for a subscription
+     * @param int $subscription_id Subscription ID
+     * @return int Number of deleted tags
+     */
     public static function delete_tags($subscription_id)
     {
-        // Delete multiple data
         return DB::table('subscriptions_tags')
             ->where('user_id', Auth::id())
             ->where('subscription_id', $subscription_id)
             ->delete();
     }
 
+    /**
+     * Update subscription fields
+     * @param int $id Subscription ID
+     * @param array $data Fields to update
+     * @return int Number of affected rows
+     */
     public static function do_update($id, $data)
     {
-        $status = DB::table(self::TABLE)
+        return DB::table(self::TABLE)
             ->where('id', $id)
             ->update($data);
-
-        return $status;
     }
 
+    /**
+     * Get all tags for a subscription
+     * @param int $subscription_id Subscription ID
+     * @return \Illuminate\Support\Collection Collection of tag objects including their IDs
+     */
     public static function get_tags($subscription_id)
     {
         return DB::table('subscriptions_tags')
@@ -159,6 +236,11 @@ class SubscriptionModel extends BaseModel
             ->get();
     }
 
+    /**
+     * Get all tags for a subscription as ID => name array
+     * @param int $subscription_id Subscription ID
+     * @return array Associative array of tag IDs to names
+     */
     public static function get_tags_arr($subscription_id)
     {
         $tags = DB::table('subscriptions_tags')
@@ -168,7 +250,6 @@ class SubscriptionModel extends BaseModel
             ->select('tags.*', 'subscriptions_tags.tag_id')
             ->get();
 
-        // Convert to key value paired array
         $data = [];
         if (!empty($tags)) {
             foreach ($tags as $key => $val) {
@@ -178,7 +259,12 @@ class SubscriptionModel extends BaseModel
         return $data;
     }
 
-
+    /**
+     * Delete a subscription and its associated tags
+     * @param int $id Subscription ID
+     * @return bool True if deletion succeeded
+     * @note Also updates the user's total subscription and tag counts
+     */
     public static function del($id)
     {
         $status = DB::table(self::TABLE)
@@ -194,7 +280,12 @@ class SubscriptionModel extends BaseModel
         return $status;
     }
 
-
+    /**
+     * Refund a subscription (status = 3)
+     * @param int $id Subscription ID
+     * @return bool Always returns true
+     * @note Cleans up associated history records
+     */
     public static function refund($id)
     {
         DB::table(self::TABLE)
@@ -210,7 +301,12 @@ class SubscriptionModel extends BaseModel
         return true;
     }
 
-
+    /**
+     * Cancel a subscription (status = 2)
+     * @param int $id Subscription ID
+     * @return bool True if cancellation succeeded
+     * @note Creates a history record before canceling
+     */
     public static function cancel($id)
     {
         $status = DB::table(self::TABLE)
@@ -219,19 +315,21 @@ class SubscriptionModel extends BaseModel
                 'status' => 2,
             ]);
 
-
         $subscription = self::get($id);
         if (empty($subscription)) {
             return false;
         }
 
-        // Add into history
-        else {
-            SubscriptionHistory::create_history($subscription);
-            return true;
-        }
+        // Create history record before cancellation
+        SubscriptionHistory::create_history($subscription);
+        return true;
     }
 
+    /**
+     * Get subscriptions with brand names for event processing
+     * @param int|null $user_id User ID (defaults to current user)
+     * @return \Illuminate\Support\Collection Subscriptions with brand_name field
+     */
     public static function get_event_by_user($user_id = NULL)
     {
         return DB::table(self::TABLE)
@@ -241,43 +339,58 @@ class SubscriptionModel extends BaseModel
             ->get();
     }
 
+    /**
+     * Get subscription data for chart display (last 12 months)
+     * @param int $folder_id Folder ID to filter by
+     * @param int|null $user_id User ID (defaults to current user)
+     * @return \Illuminate\Support\Collection Subscription objects for charting:
+     *   - Filters by type=1 (regular subscriptions)
+     *   - Limited to last 12 months
+     */
     public static function get_subs_chart_by_folder($folder_id, $user_id = NULL)
     {
         return DB::table('subscriptions')
             ->where('subscriptions.user_id', self::get_user_id($user_id))
             ->where('subscriptions.folder_id', $folder_id)
             ->where('type', 1)
-
-            // Display from last 1 year data
             ->whereBetween('payment_date', [
                 date('Y-m-d', strtotime('-12 month')),
                 date('Y-m-d'),
             ])
-
             ->select('subscriptions.*')
             ->orderBy('subscriptions.payment_date')
             ->get();
     }
 
+    /**
+     * Get lifetime subscription data for chart display (last 12 months)
+     * @param int $folder_id Folder ID to filter by
+     * @param int|null $user_id User ID (defaults to current user)
+     * @return \Illuminate\Support\Collection Subscription objects for charting:
+     *   - Filters by type=3 (lifetime subscriptions)
+     *   - Limited to last 12 months
+     */
     public static function get_ltd_chart_by_folder($folder_id, $user_id = NULL)
     {
         return DB::table('subscriptions')
             ->where('subscriptions.user_id', self::get_user_id($user_id))
             ->where('subscriptions.folder_id', $folder_id)
             ->where('type', 3)
-
-            // Display from last 1 year data
             ->whereBetween('payment_date', [
                 date('Y-m-d', strtotime('-12 month')),
                 date('Y-m-d'),
             ])
-
             ->select('subscriptions.*')
             ->orderBy('subscriptions.payment_date')
             ->get();
     }
 
-
+    /**
+     * Set or calculate refund date for a subscription
+     * @param int $subscription_id Subscription ID
+     * @return void
+     * @note Handles complex timezone and alert preference calculations
+     */
     public static function set_refund_date($subscription_id)
     {
         $subscription = DB::table(self::TABLE)

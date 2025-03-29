@@ -9,9 +9,23 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Library\NotificationEngine;
 
+/**
+ * UserModel - Handles all user-related database operations
+ *
+ * This model provides methods for user management including:
+ * - User CRUD operations
+ * - Profile management
+ * - Plan/subscription handling
+ * - Payment methods
+ * - Contacts management
+ * - System limits checking
+ */
 class UserModel extends BaseModel
 {
+    /** @var string Database table name for users */
     private const TABLE = 'users';
+    
+    /** @var int|null Stores the current user ID for session persistence */
     private static $user_id = null;
 
     // public function __construct()
@@ -22,6 +36,11 @@ class UserModel extends BaseModel
     //         ->first();
     // }
 
+    /**
+     * Get a user by ID
+     * @param int $id User ID to retrieve
+     * @return object|null User object or null if not found
+     */
     public static function get($id)
     {
         return DB::table(self::TABLE)
@@ -30,6 +49,10 @@ class UserModel extends BaseModel
             ->first();
     }
 
+    /**
+     * Get the currently authenticated user
+     * @return object|null Current user object or null if not authenticated
+     */
     public static function get_me()
     {
         return DB::table(self::TABLE)
@@ -38,6 +61,11 @@ class UserModel extends BaseModel
             ->first();
     }
 
+    /**
+     * Get a user by email address
+     * @param string $email Email address to search for
+     * @return object|null User object or null if not found
+     */
     public static function get_by_email($email)
     {
         return DB::table(self::TABLE)
@@ -46,6 +74,10 @@ class UserModel extends BaseModel
             ->first();
     }
 
+    /**
+     * Get all users from the database
+     * @return \Illuminate\Support\Collection Collection of all user objects
+     */
     public static function get_all()
     {
         return DB::table(self::TABLE)
@@ -60,6 +92,10 @@ class UserModel extends BaseModel
             ->first();
     }
 
+    /**
+     * Get the user's profile information from users_profile table
+     * @return object|null Profile data object or null if not found
+     */
     public static function get_profile()
     {
         return DB::table('users_profile')
@@ -68,6 +104,10 @@ class UserModel extends BaseModel
             ->first();
     }
 
+    /**
+     * Get the user's alert preferences from users_alert_preferences table
+     * @return object|null Alert preferences object or null if not found
+     */
     public static function get_alert_preference()
     {
         return DB::table('users_alert_preferences')
@@ -311,6 +351,17 @@ class UserModel extends BaseModel
             ->insertGetId($data);
     }
 
+    /**
+     * Update user record and optionally create an audit log entry
+     * @param int $id User ID to update
+     * @param array $data Associative array of fields to update
+     * @param string|null $event_type Type of event for audit logging
+     * @param mixed|null $other If not null, skips audit log creation
+     * @return int Number of affected rows
+     *
+     * @note When $other is null, automatically creates an audit log entry
+     * @see NotificationEngine::staticModel() For audit log implementation
+     */
     public static function do_update($id, $data, $event_type = null, $other = null)
     {
         $status = DB::table(self::TABLE)
@@ -412,6 +463,15 @@ class UserModel extends BaseModel
             ->update($data);
     }
 
+    /**
+     * Update user profile information in users_profile table
+     * @param int $user_id ID of user whose profile to update
+     * @param array $data Associative array of profile fields to update
+     * @return int Number of affected rows
+     *
+     * @note Creates an audit log entry for the update operation
+     * @see do_update() For general user record updates
+     */
     public static function update_profile($user_id, $data)
     {
         // Create event logs

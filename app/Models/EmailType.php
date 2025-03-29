@@ -6,11 +6,26 @@ use App\BaseModel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * EmailType - Manages email types
+ *
+ * This model handles:
+ * - Email type CRUD operations
+ * - Retrieval of email types and template names
+ */
 class EmailType extends BaseModel
 {
+    /** @var string Database table name */
     private const TABLE = 'email_types';
+    
+    /** @var int|null Current user ID for session persistence */
     private static $user_id = NULL;
 
+    /**
+     * Get an email type by ID
+     * @param int $id Email type ID
+     * @return object|null Email type object or null if not found
+     */
     public static function get($id)
     {
         return DB::table(self::TABLE)
@@ -19,6 +34,10 @@ class EmailType extends BaseModel
             ->first();
     }
 
+    /**
+     * Get all email types
+     * @return \Illuminate\Support\Collection Collection of all email type objects
+     */
     public static function get_all()
     {
         return DB::table(self::TABLE)
@@ -26,6 +45,10 @@ class EmailType extends BaseModel
             ->get();
     }
 
+    /**
+     * Get all distinct template names
+     * @return \Illuminate\Support\Collection Collection of distinct template names
+     */
     public static function get_all_template_name()
     {
         return DB::table(self::TABLE)
@@ -35,6 +58,12 @@ class EmailType extends BaseModel
             ->get();
     }
 
+    /**
+     * Get all email templates for a specific user (This method seems misplaced)
+     * @param int|null $user_id User ID (defaults to current user)
+     * @return \Illuminate\Support\Collection Collection of user's template objects
+     * @note This method seems to be related to email templates and might be better placed in EmailTemplateModel
+     */
     public static function get_by_user($user_id = NULL)
     {
         return DB::table(self::TABLE)
@@ -43,12 +72,23 @@ class EmailType extends BaseModel
             ->get();
     }
 
+    /**
+     * Create a new email type
+     * @param array $data Email type data
+     * @return int Inserted email type ID
+     */
     public static function create($data)
     {
         return DB::table(self::TABLE)
             ->insertGetId(parent::_add_created($data));
     }
 
+    /**
+     * Update an existing email type
+     * @param int $id Email type ID
+     * @param array $data Email type data to update
+     * @return int Number of affected rows
+     */
     public static function do_update($id, $data)
     {
         return DB::table(self::TABLE)
@@ -56,6 +96,11 @@ class EmailType extends BaseModel
             ->update($data);
     }
 
+    /**
+     * Get the current user ID
+     * @param int|null $user_id User ID (defaults to current user)
+     * @return int User ID
+     */
     private static function get_user_id($user_id = NULL)
     {
         if (empty(self::$user_id)) {
