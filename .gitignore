@@ -21,3 +21,4 @@ yarn-error.log
 /modules/Update_package.zip
 /modules/Database_package
 /modules/Update_package
+node_modules
