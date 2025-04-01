@@ -395,6 +395,8 @@ Route::group([
         Route::post('edit/{id}', 'Admin\ProductController@edit')->name('admin/product/edit');
         Route::post('update/{id}', 'Admin\ProductController@update')->name('admin/product/update');
         Route::post('delete/{id}', 'Admin\ProductController@delete')->name('admin/product/delete');
+        Route::post('search-logo', 'Admin\ProductController@searchLogo')->name('admin/product/search-logo');
+        Route::post('download-logo', 'Admin\ProductController@downloadLogo')->name('admin/product/download-logo');
 
         Route::get('logos_and_favicons', 'Admin\LogosAndFaviconsImportController@index')->name('admin/product/logos_and_favicons');
         Route::get('check/favicons', 'Admin\LogosAndFaviconsImportController@check_favicons')->name('admin/product/check/favicons');

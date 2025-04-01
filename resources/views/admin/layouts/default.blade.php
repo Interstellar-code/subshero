@@ -226,6 +226,9 @@
     <script src="{{ asset_ver('js/admin/product/product_images_import.js') }}"></script>
     <script src="{{ asset_ver('js/admin/customer.js') }}"></script>
     <script src="{{ asset_ver('js/admin/product/adapt.js') }}"></script>
+    
+    <!-- Logo Search Feature CSS -->
+    <link href="{{ asset_ver('css/admin/logo-search.css') }}" rel="stylesheet">
 
     @yield('head')
 

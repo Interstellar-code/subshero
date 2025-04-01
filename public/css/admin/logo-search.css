@@ -1,0 +1,87 @@
+/* Logo Search Feature Styles */
+.search-logo-icon {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.search-logo-icon:hover {
+    background-color: #f8f9fa;
+    color: #007bff;
+}
+
+.logo-search-result {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 100%;
+}
+
+.logo-search-result:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-color: #007bff;
+}
+
+.logo-search-result .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+}
+
+.logo-search-result img {
+    max-height: 100px;
+    width: auto;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+.logo-load-error {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border: 1px dashed #ced4da;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+}
+
+#logo_search_results {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#create_both_versions_container {
+    margin-right: auto;
+    padding: 0.5rem 1rem;
+}
+
+/* Group headers in search results */
+#logo_search_results h5 {
+    color: #495057;
+    font-size: 1.1rem;
+    margin-top: 1rem;
+}
+
+#logo_search_results hr {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    border-color: #e9ecef;
+}
+
+/* Loading indicator */
+#logo_search_loading {
+    padding: 2rem 0;
+}
+
+#logo_search_loading .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* No results message */
+#logo_search_no_results {
+    padding: 2rem 0;
+    color: #6c757d;
+}

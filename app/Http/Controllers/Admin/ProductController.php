@@ -817,4 +817,396 @@ class ProductController extends Controller
         $fileContent = preg_replace("/^$bom/", '', $fileContent);
         file_put_contents($filePath, $fileContent);
     }
+    /**
+     * Search for product logos using web scraping and API services
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function searchLogo(Request $request)
+    {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'product_name' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return Response::json([
+                'status' => false,
+                'message' => $validator->errors(),
+            ]);
+        }
+
+        $productName = $request->input('product_name');
+        
+        // Prepare the search results array
+        $results = [];
+        
+        // Get results from web scraping
+        $scrapedResults = $this->searchLogoFromWebScraping($productName);
+        
+        // Get results from available logo API services as fallback
+        $apiResults = $this->searchLogoFromApis($productName);
+        
+        // Combine results, prioritizing scraped results
+        $results = array_merge($scrapedResults, $apiResults);
+        
+        return Response::json([
+            'status' => true,
+            'message' => 'Success',
+            'data' => $results,
+        ]);
+    }
+    
+    /**
+     * Search for logos using web scraping
+     *
+     * @param string $productName
+     * @return array
+     */
+    private function searchLogoFromWebScraping($productName)
+    {
+        $results = [];
+        $searchTerm = urlencode($productName . " logo");
+        
+        // Google Images search URL
+        $url = "https://www.google.com/search?q={$searchTerm}&tbm=isch&tbs=iar:xw,ift:png";
+        // Backup URL using Brave Search
+        $backupUrl = "https://search.brave.com/search?q={$searchTerm}";
+        
+        try {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            
+            // Check for proxy environment variables
+            $envVars = array_change_key_case($_SERVER, CASE_LOWER);
+            $httpProxy = isset($envVars['http_proxy']) ? $envVars['http_proxy'] : null;
+            $httpsProxy = isset($envVars['https_proxy']) ? $envVars['https_proxy'] : null;
+            
+            if (!empty($httpProxy)) {
+                curl_setopt($ch, CURLOPT_PROXY, $httpProxy);
+            } elseif (!empty($httpsProxy)) {
+                curl_setopt($ch, CURLOPT_PROXY, $httpsProxy);
+            }
+            
+            $response = curl_exec($ch);
+            
+            if ($response === false) {
+                // If Google search fails, try Brave search as backup
+                curl_close($ch);
+                
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $backupUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                
+                if (!empty($httpProxy)) {
+                    curl_setopt($ch, CURLOPT_PROXY, $httpProxy);
+                } elseif (!empty($httpsProxy)) {
+                    curl_setopt($ch, CURLOPT_PROXY, $httpsProxy);
+                }
+                
+                $response = curl_exec($ch);
+            }
+            
+            if ($response !== false) {
+                // Extract image URLs from the HTML response
+                $imageUrls = $this->extractImageUrlsFromPage($response);
+                
+                // Format the results
+                $counter = 0;
+                foreach ($imageUrls as $imageUrl) {
+                    if ($counter >= 10) break; // Limit to 10 results
+                    
+                    $results[] = [
+                        'source' => 'Web Search',
+                        'url' => $imageUrl,
+                        'type' => 'logo',
+                        'product_name' => $productName
+                    ];
+                    
+                    $counter++;
+                }
+            }
+            
+            curl_close($ch);
+        } catch (\Exception $e) {
+            // Log the error but continue with API results
+            \Log::error('Error in web scraping for logos: ' . $e->getMessage());
+        }
+        
+        return $results;
+    }
+    
+    /**
+     * Extract image URLs from HTML content
+     *
+     * @param string $html
+     * @return array
+     */
+    private function extractImageUrlsFromPage($html)
+    {
+        $imageUrls = [];
+        
+        try {
+            $doc = new \DOMDocument();
+            @$doc->loadHTML($html);
+            
+            $imgTags = $doc->getElementsByTagName('img');
+            foreach ($imgTags as $imgTag) {
+                $src = $imgTag->getAttribute('src');
+                
+                // Skip favicons and small icons
+                if (!strstr($imgTag->getAttribute('class'), "favicon") &&
+                    !strstr($imgTag->getAttribute('class'), "logo") &&
+                    $imgTag->getAttribute('width') > 50) {
+                    
+                    // Ensure it's a valid URL
+                    if (filter_var($src, FILTER_VALIDATE_URL)) {
+                        $imageUrls[] = $src;
+                    }
+                    // Handle data URLs
+                    elseif (strpos($src, 'data:image/') === 0) {
+                        continue; // Skip data URLs for now
+                    }
+                    // Handle relative URLs
+                    elseif (strpos($src, 'http') !== 0 && !empty($src)) {
+                        // Convert relative to absolute URL
+                        if (strpos($src, '//') === 0) {
+                            $src = 'https:' . $src;
+                        }
+                        
+                        if (filter_var($src, FILTER_VALIDATE_URL)) {
+                            $imageUrls[] = $src;
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error extracting image URLs: ' . $e->getMessage());
+        }
+        
+        return $imageUrls;
+    }
+    
+    /**
+     * Search for logos from various API services
+     *
+     * @param string $productName
+     * @return array
+     */
+    private function searchLogoFromApis($productName)
+    {
+        $results = [];
+        
+        // NOTE: Clearbit Logo API will be sunset/discontinued
+        // This is included as a fallback until fully deprecated
+        try {
+            // Convert product name to a domain-like format
+            $domainName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $productName));
+            
+            // Add Clearbit Logo API result
+            $clearbitUrl = "https://logo.clearbit.com/{$domainName}.com";
+            $results[] = [
+                'source' => 'Logo API',
+                'url' => $clearbitUrl,
+                'type' => 'logo',
+                'product_name' => $productName
+            ];
+            
+            // Add with www subdomain
+            $clearbitWwwUrl = "https://logo.clearbit.com/www.{$domainName}.com";
+            $results[] = [
+                'source' => 'Logo API (www)',
+                'url' => $clearbitWwwUrl,
+                'type' => 'logo',
+                'product_name' => $productName
+            ];
+            
+            // Add Favicon API result
+            $clearbitFaviconUrl = "https://logo.clearbit.com/{$domainName}.com?size=128";
+            $results[] = [
+                'source' => 'Favicon API',
+                'url' => $clearbitFaviconUrl,
+                'type' => 'favicon',
+                'product_name' => $productName
+            ];
+            
+            // Add Favicon API with www subdomain
+            $clearbitFaviconWwwUrl = "https://logo.clearbit.com/www.{$domainName}.com?size=128";
+            $results[] = [
+                'source' => 'Favicon API (www)',
+                'url' => $clearbitFaviconWwwUrl,
+                'type' => 'favicon',
+                'product_name' => $productName
+            ];
+        } catch (\Exception $e) {
+            \Log::error('Error in API logo search: ' . $e->getMessage());
+        }
+        
+        return $results;
+    }
+    
+    /**
+     * Download and save a logo for a product
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function downloadLogo(Request $request)
+    {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'product_id' => 'required|integer|exists:products,id',
+            'logo_url' => 'required|url',
+            'type' => 'required|in:logo,favicon',
+        ]);
+
+        if ($validator->fails()) {
+            return Response::json([
+                'status' => false,
+                'message' => $validator->errors(),
+            ]);
+        }
+
+        $productId = $request->input('product_id');
+        $logoUrl = $request->input('logo_url');
+        $type = $request->input('type');
+        
+        // Get the product to update its image path later
+        $product = ProductModel::get($productId);
+        if (!$product) {
+            return Response::json([
+                'status' => false,
+                'message' => 'Product not found',
+            ]);
+        }
+        
+        try {
+            // Download the image
+            $imageContents = file_get_contents($logoUrl);
+            if (!$imageContents) {
+                return Response::json([
+                    'status' => false,
+                    'message' => 'Failed to download the image',
+                ]);
+            }
+            
+            // Create a temporary file
+            $tempFile = tempnam(sys_get_temp_dir(), 'logo_');
+            file_put_contents($tempFile, $imageContents);
+            
+            // Create a filename based on the product name
+            $fileName = $product->product_name . '.png';
+            $fileName = strtolower(preg_replace('/[^a-z0-9]/', '', $fileName)) . '.png';
+            
+            // Process the image using Intervention Image
+            $image = \Intervention\Image\Facades\Image::make($tempFile);
+            
+            // Create both logo and favicon versions
+            $results = [];
+            
+            // Process logo (320x120)
+            if ($type == 'logo' || $request->input('create_both', false)) {
+                $logoImage = clone $image;
+                $logoImage->resize(320, 120, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+                
+                // Save to a new temp file
+                $logoTempFile = tempnam(sys_get_temp_dir(), 'logo_processed_');
+                $logoImage->save($logoTempFile);
+                
+                // Create an UploadedFile instance for the logo
+                $logoUploadedFile = new \Illuminate\Http\UploadedFile(
+                    $logoTempFile,
+                    $fileName,
+                    mime_content_type($logoTempFile),
+                    null,
+                    true
+                );
+                
+                // Use the existing File model method to save the logo
+                $logoResult = File::add_to_product_get_path($logoUploadedFile, $productId, 'logos');
+                
+                // Clean up the temporary logo file
+                @unlink($logoTempFile);
+                
+                if ($logoResult['status']) {
+                    $results['logo'] = $logoResult;
+                    // Update the product record with the new logo path
+                    $updateData['image'] = $logoResult['path'];
+                }
+            }
+            
+            // Process favicon (128x128)
+            if ($type == 'favicon' || $request->input('create_both', false)) {
+                $faviconImage = clone $image;
+                $faviconImage->fit(128, 128, function ($constraint) {
+                    $constraint->upsize();
+                });
+                
+                // Save to a new temp file
+                $faviconTempFile = tempnam(sys_get_temp_dir(), 'favicon_processed_');
+                $faviconImage->save($faviconTempFile);
+                
+                // Create an UploadedFile instance for the favicon
+                $faviconUploadedFile = new \Illuminate\Http\UploadedFile(
+                    $faviconTempFile,
+                    $fileName,
+                    mime_content_type($faviconTempFile),
+                    null,
+                    true
+                );
+                
+                // Use the existing File model method to save the favicon
+                $faviconResult = File::add_to_product_get_path($faviconUploadedFile, $productId, 'favicons');
+                
+                // Clean up the temporary favicon file
+                @unlink($faviconTempFile);
+                
+                if ($faviconResult['status']) {
+                    $results['favicon'] = $faviconResult;
+                    // Update the product record with the new favicon path
+                    $updateData['favicon'] = $faviconResult['path'];
+                }
+            }
+            
+            // Clean up the original temporary file
+            @unlink($tempFile);
+            
+            // Check if we have any successful results
+            if (empty($results)) {
+                return Response::json([
+                    'status' => false,
+                    'message' => 'Failed to process and save the image(s)',
+                ]);
+            }
+            
+            // Update the product record with the new image paths
+            ProductModel::do_update($productId, $updateData);
+            
+            return Response::json([
+                'status' => true,
+                'message' => 'Logo successfully downloaded and saved',
+                'data' => [
+                    'path' => $result['path'],
+                    'type' => $type
+                ],
+            ]);
+            
+        } catch (\Exception $e) {
+            return Response::json([
+                'status' => false,
+                'message' => 'Error processing the image: ' . $e->getMessage(),
+            ]);
+        }
+    }
 }

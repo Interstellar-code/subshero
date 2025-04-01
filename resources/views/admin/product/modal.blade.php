@@ -54,7 +54,14 @@
                             </div>
                             <div class="position-relative form-group">
                                 <label for="product_add_product_name" class="">@lang('Product Name')</label>
-                                <input name="product_name" id="product_add_product_name" maxlength="{{ len()->products->product_name }}" type="text" class="form-control" required>
+                                <div class="input-group">
+                                    <input name="product_name" id="product_add_product_name" maxlength="{{ len()->products->product_name }}" type="text" class="form-control" required>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text search-logo-icon" id="product_add_search_logo" style="display: none; cursor: pointer;">
+                                            <i class="fa fa-search"></i>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                             <div class="position-relative form-group">
                                 <label for="product_add_description" class="">@lang('Description (optional)')</label>
@@ -233,6 +240,37 @@
                 </button>
             </div>
             <div class="modal-body">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logo Search Results Modal -->
+<div id="logo_search_modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@lang('Logo Search Results')</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="logo_search_results" class="row">
+                    <!-- Search results will be displayed here -->
+                </div>
+                <div id="logo_search_loading" class="text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p>Searching for logos...</p>
+                </div>
+                <div id="logo_search_no_results" class="text-center" style="display: none;">
+                    <p>No logos found. Try a different product name.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">@lang('Close')</button>
             </div>
         </div>
     </div>
