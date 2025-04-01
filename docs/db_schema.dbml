@@ -1,0 +1,174 @@
+Project subshero {
+  database_type: 'MySQL'
+  Note: 'Generated from database.sql'
+}
+
+Table users {
+  id int [pk, increment]
+  name varchar(255)
+  email varchar(255) [unique]
+  password varchar(255)
+  created_at datetime
+  updated_at datetime
+  status tinyint
+}
+
+Table subscriptions {
+  id int [pk, increment]
+  user_id int [ref: > users.id]
+  brand_id int [ref: > brands.id]
+  amount decimal
+  start_date date
+  end_date date
+  frequency varchar(20)
+  status tinyint
+}
+
+Table brands {
+  id int [pk, increment]
+  name varchar(100)
+  description varchar(255)
+  url varchar(100)
+  status tinyint
+}
+
+Table plans {
+  id int [pk, increment]
+  name varchar(50)
+  price decimal
+  duration_days smallint
+  text description
+}
+
+Table users_alert {
+  id int [pk, increment]
+  user_id int [ref: > users.id]
+  is_default tinyint
+  time_period int
+  alert_time time
+}
+
+Table users_contacts {
+  id int [pk, increment]
+  user_id int [ref: > users.id]
+  name varchar(50)
+  email varchar(50)
+  status tinyint
+}
+
+Table users_payment_methods {
+  id int [pk, increment]
+  user_id int [ref: > users.id]
+  payment_type varchar(20)
+  name varchar(20)
+  description varchar(100)
+  expiry date
+  created_at datetime
+  updated_at datetime
+}
+
+Table subscriptions_tags {
+  id int [pk, increment]
+  subscription_id int [ref: > subscriptions.id]
+  tag_id int [ref: > tags.id]
+}
+
+Table email_templates {
+  id int [pk, increment]
+  user_id int [ref: > users.id]
+  type varchar(50)
+  subject varchar(100)
+  body mediumtext
+  is_default tinyint
+  status tinyint
+  created_at datetime
+  created_by int [ref: > users.id]
+}
+
+Table email_types {
+  id int [pk, increment]
+  name varchar(50) [unique]
+}
+
+Table events {
+  id int [pk, increment]
+  event_type varchar(50)
+  table_name varchar(50)
+  table_row_id int
+  user_id int [ref: > users.id]
+  event_datetime datetime
+  event_status tinyint
+}
+
+Table event_types {
+  id int [pk, increment]
+  name varchar(50) [unique]
+}
+
+Table event_emails {
+  id int [pk, increment]
+  event_id int [ref: > events.id]
+  email_template_id int [ref: > email_templates.id]
+  status tinyint
+  sent_at datetime
+}
+
+Table event_browser {
+  id int [pk, increment]
+  event_id int [ref: > events.id]
+  browser_name varchar(50)
+  browser_version varchar(20)
+  status tinyint
+}
+
+Table event_webhook {
+  id int [pk, increment]
+  event_id int [ref: > events.id]
+  webhook_url varchar(255)
+  status tinyint
+  created_at datetime
+}
+
+Table files {
+  id int [pk, increment]
+  user_id int [ref: > users.id]
+  name varchar(255)
+  path varchar(255)
+  size bigint
+  created_at datetime
+}
+
+Table folder {
+  id int [pk, increment]
+  user_id int [ref: > users.id]
+  name varchar(255)
+  parent_id int [ref: > folder.id]
+  created_at datetime
+}
+
+Table tags {
+  id int [pk, increment]
+  user_id int [ref: > users.id]
+  name varchar(50)
+  color varchar(20)
+  created_at datetime
+}
+
+Table config {
+  id int [pk, increment]
+  smtp_host varchar(50)
+  smtp_port varchar(5)
+  smtp_username varchar(50)
+  smtp_password varchar(50)
+  recaptcha_status tinyint
+  recaptcha_site_key varchar(50)
+  recaptcha_secret_key varchar(50)
+}
+
+Table settings {
+  id int [pk, increment]
+  name varchar(50)
+  value text
+  created_at datetime
+  updated_at datetime
+}
